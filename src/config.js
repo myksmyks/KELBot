@@ -11,6 +11,8 @@ const DEFAULT_CONFIG = {
     streamerCommsChannelId: "",
     commsChannelId: "",
     syncRoleId: "",
+    welcomeChannelId: "",
+    verifiedRoleId: "",
     availability: {
       streamers: { channelId: "", roleId: "" },
       referees: { channelId: "", roleId: "" },
@@ -126,6 +128,18 @@ function applyLegacyEnvFallbacks(loadedConfig, providedConfig, env) {
     ["discord", "syncRoleId"],
     loadedConfig.discord.syncRoleId,
     env.SYNC_ROLE_ID || "",
+  );
+  loadedConfig.discord.welcomeChannelId = preferProvidedConfig(
+    providedConfig,
+    ["discord", "welcomeChannelId"],
+    loadedConfig.discord.welcomeChannelId,
+    env.WELCOME_CHANNEL_ID || "",
+  );
+  loadedConfig.discord.verifiedRoleId = preferProvidedConfig(
+    providedConfig,
+    ["discord", "verifiedRoleId"],
+    loadedConfig.discord.verifiedRoleId,
+    env.VERIFIED_ROLE_ID || "",
   );
 
   const availability = loadedConfig.discord.availability;
@@ -328,6 +342,15 @@ function getFeatureConfigurationWarnings(candidate, env = process.env) {
   if (candidate.discord.resultChannelIds.length === 0) {
     warnings.push(
       "Match broadcasts have no discord.resultChannelIds configured.",
+    );
+  }
+
+  if (
+    !candidate.discord.welcomeChannelId ||
+    !candidate.discord.verifiedRoleId
+  ) {
+    warnings.push(
+      "Welcome verification requires discord.welcomeChannelId and discord.verifiedRoleId.",
     );
   }
 

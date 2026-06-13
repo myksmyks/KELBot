@@ -1,34 +1,47 @@
 const { SlashCommandBuilder } = require("discord.js");
-const { getDatabase } = require("../../database/db");
+const {
+  applyVerifiedMemberState,
+} = require("../../services/discordVerificationService");
 const logger = require("../../services/logger");
+const {
+  completeVerification,
+} = require("../../services/verificationService");
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("verifyosu")
     .setDescription("Verify your code")
-    .addStringOption((o) =>
-      o.setName("code").setDescription("Code from Bancho").setRequired(true),
+    .addStringOption((option) =>
+      option
+        .setName("code")
+        .setDescription("Code from Bancho")
+        .setRequired(true),
     ),
 
   async execute(interaction) {
-    const db = await getDatabase();
-    const code = interaction.options.getString("code");
-
-    const row = await db.get("SELECT * FROM users WHERE discord_id = ?", [
+    const result = await completeVerification(
       interaction.user.id,
-    ]);
-    if (!row || row.verification_code !== code) {
-      return interaction.editReply("Incorrect code.");
+      interaction.options.getString("code"),
+    );
+
+    if (result.status === "verified") {
+      await interaction.editReply(
+        await applyVerifiedMemberState(interaction, result),
+      );
+      logger.info(
+        "VERIFICATION",
+        `User ${interaction.user.tag} verified as ${result.username}.`,
+      );
+      return;
     }
 
-    await db.run(
-      "UPDATE users SET is_verified = 1, verification_code = NULL WHERE discord_id = ?",
-      [interaction.user.id],
-    );
-    await interaction.editReply(`Verified as **${row.osu_username}**!`);
-    logger.info(
-      "VERIFICATION",
-      `User ${interaction.user.tag} verified as ${row.osu_username}.`,
-    );
+    const messages = {
+      already_verified: `You are already verified as **${result.username}**.`,
+      busy: "A verification action is already running. Please try again shortly.",
+      incorrect_code: "Incorrect code.",
+      no_pending:
+        "No active verification found. Use the welcome button or `/osuset` first.",
+    };
+    await interaction.editReply(messages[result.status] || "Verification failed.");
   },
 };

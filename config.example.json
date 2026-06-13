@@ -8,6 +8,8 @@
     "streamerCommsChannelId": "streamer_and_referee_reminder_channel_id",
     "commsChannelId": "commentator_reminder_channel_id",
     "syncRoleId": "player_role_id",
+    "welcomeChannelId": "welcome_or_verification_channel_id",
+    "verifiedRoleId": "verified_member_role_id",
     "availability": {
       "streamers": {
         "channelId": "streamer_availability_channel_id",

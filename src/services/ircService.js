@@ -36,8 +36,10 @@ class IrcService {
     try {
       await this.client.getUser(target).sendMessage(msg);
       logger.info("IRC", `Sent PM to ${target}`);
+      return true;
     } catch (e) {
       logger.error("IRC", `Failed to message ${target}`, e);
+      return false;
     }
   }
 

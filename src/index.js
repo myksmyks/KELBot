@@ -28,12 +28,18 @@ const ircService = require("./services/ircService");
 const cron = require("node-cron");
 const { syncGoogleSheetsToDb } = require("./services/syncSheets");
 const logger = require("./services/logger");
+const {
+  handleGuildMemberAdd,
+  handleVerificationInteraction,
+} = require("./events/verificationEvents");
 
 for (const warning of getFeatureConfigurationWarnings(config)) {
   logger.warn("CONFIG", warning);
 }
 
-const client = new Client({ intents: [3276799] });
+const client = new Client({
+  intents: [3276799 | GatewayIntentBits.GuildMembers],
+});
 client.commands = new Collection();
 client.reminderChannels = new Map();
 
@@ -114,6 +120,22 @@ async function initializeBot() {
 }
 
 client.on("interactionCreate", async (interaction) => {
+  try {
+    if (await handleVerificationInteraction(interaction)) return;
+  } catch (error) {
+    logger.error("VERIFICATION", "Verification interaction failed", error);
+    const response = {
+      content: "Verification could not be completed. Please try again.",
+      ephemeral: true,
+    };
+    if (!interaction.replied && !interaction.deferred) {
+      await interaction.reply(response).catch(() => {});
+    } else {
+      await interaction.editReply(response).catch(() => {});
+    }
+    return;
+  }
+
   if (!interaction.isChatInputCommand()) return;
   const cmd = client.commands.get(interaction.commandName);
   if (!cmd) return;
@@ -147,6 +169,8 @@ client.on("interactionCreate", async (interaction) => {
     }
   }
 });
+
+client.on("guildMemberAdd", handleGuildMemberAdd);
 
 client.login(process.env.TOKEN).catch((error) => {
   logger.error("SYSTEM", "Discord login failed", error);

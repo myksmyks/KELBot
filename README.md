@@ -54,7 +54,7 @@ Public, non-secret settings are loaded from `config.json`:
 
 | Section | Purpose |
 | --- | --- |
-| `discord` | Application, result-channel, reminder-channel, availability-channel, and role IDs |
+| `discord` | Application, result-channel, reminder-channel, welcome-verification channel, and role IDs |
 | `googleSheets` | Spreadsheet IDs and tab names |
 | `challonge.tournamentId` | Public Challonge tournament identifier |
 | `runtime` | SQLite path and log level |
@@ -79,6 +79,17 @@ The variables required for the process to start are:
 Other variables in [.env.example](.env.example) enable osu!, Google Sheets,
 availability, icon-upload, and Challonge features. Missing optional feature
 configuration is logged without printing secret values.
+
+Automatic welcome verification uses:
+
+- `discord.welcomeChannelId`: channel where new members receive the welcome button
+- `discord.verifiedRoleId`: role granted after successful osu! verification
+
+`WELCOME_CHANNEL_ID` and `VERIFIED_ROLE_ID` remain available as environment
+fallbacks. Enable the privileged **Server Members Intent** in the Discord
+Developer Portal. The bot also needs View Channel and Send Messages in the
+welcome channel, Manage Roles with its highest role above the verified role,
+and Manage Nicknames with its highest role above members it should rename.
 
 Google credentials must be stored outside Git and referenced by
 `CREDENTIALS_PATH`. The service account needs read access to the configured
@@ -118,8 +129,8 @@ incorrect match or mappool data into SQLite.
 
 | Command | Options | Description |
 | --- | --- | --- |
-| `/osuset` | `username` | Looks up an osu! account, stores a verification request, and sends a verification code through Bancho private messages. An already verified account cannot be changed with this command. |
-| `/verifyosu` | `code` | Confirms the code sent by `/osuset` and marks the Discord-to-osu! account link as verified. |
+| `/osuset` | `username` | Starts the same osu! verification flow as the welcome button and sends a code through Bancho private messages. |
+| `/verifyosu` | `code` | Confirms a pending code, grants the configured verified role, updates the nickname, and displays current osu! profile statistics. |
 | `/schedule` | None | Shows up to four upcoming non-qualifier matches from the local SQLite database, including Discord relative timestamps. |
 
 ### Match Staff Commands
@@ -157,6 +168,19 @@ npm run test:ci
 
 The smoke check loads service modules and validates every slash-command
 definition without connecting to Discord, Bancho, Google, or osu!.
+
+### Manual Verification Checklist
+
+- Join the server with a new user and confirm the welcome verification message appears in the configured channel.
+- Click **Verify with osu!** as that user and confirm another member cannot use the same button.
+- Submit an unknown osu! username and confirm a clean error is shown.
+- Submit a valid username and confirm the Bancho private message contains a code.
+- Enter an invalid code and confirm verification remains pending without granting access.
+- Enter the valid code and confirm the configured role is granted.
+- Confirm the member nickname changes to the canonical osu! username.
+- Temporarily remove Manage Nicknames or move the member above the bot, then confirm verification succeeds with a clear nickname warning.
+- Confirm the verified message shows the profile link, global rank, PP, country rank, and a clean fallback for missing data.
+- Run `/osuset` and `/verifyosu` with a separate test user and confirm the existing command flow still works.
 
 ## Docker
 
