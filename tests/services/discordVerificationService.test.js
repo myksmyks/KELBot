@@ -17,6 +17,7 @@ describe("Discord Verification Service", () => {
   test("formats real osu! rank data and country flag", () => {
     const embed = createVerifiedEmbed("Tournament Server", "Player", {
       id: 42,
+      avatar_url: "https://a.ppy.sh/42",
       country_code: "PL",
       statistics: {
         global_rank: 1234,
@@ -25,12 +26,14 @@ describe("Discord Verification Service", () => {
       },
     });
 
-    expect(embed.data.title).toContain("Player");
+    expect(embed.data.title).toBe("✅ You are verified, Player!");
+    expect(embed.data.thumbnail.url).toBe("https://a.ppy.sh/42");
     expect(embed.data.fields[0].value).toContain(
       "https://osu.ppy.sh/users/42",
     );
-    expect(embed.data.fields[1].value).toContain("#1,234 (9,876pp)");
+    expect(embed.data.fields[1].value).toContain("🌎 #1,234 (9,876pp)");
     expect(embed.data.fields[1].value).toContain("🇵🇱 #56");
+    expect(embed.data.fields[1].value).not.toContain("osu!");
   });
 
   test("uses clean fallbacks when osu! statistics are unavailable", () => {

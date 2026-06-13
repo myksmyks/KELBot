@@ -183,9 +183,9 @@ async function handleCodeModal(interaction) {
   );
 
   if (result.status === "verified") {
-    await interaction.editReply(
-      await applyVerifiedMemberState(interaction, result),
-    );
+    const response = await applyVerifiedMemberState(interaction, result);
+    await interaction.followUp({ ...response, ephemeral: false });
+    await interaction.deleteReply();
   } else {
     const messages = {
       already_verified: `You are already verified as **${result.username}**.`,

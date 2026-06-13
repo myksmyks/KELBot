@@ -1,5 +1,6 @@
 const { config } = require("../../src/config");
 const {
+  CODE_MODAL_PREFIX,
   START_BUTTON_PREFIX,
   handleGuildMemberAdd,
   handleVerificationInteraction,
@@ -56,5 +57,41 @@ describe("Verification Events", () => {
         ephemeral: true,
       }),
     );
+  });
+
+  test("publishes successful verification as a public message", async () => {
+    const interaction = {
+      customId: `${CODE_MODAL_PREFIX}discord-1`,
+      user: { id: "discord-1" },
+      member: {
+        roles: { add: jest.fn().mockResolvedValue(true) },
+        setNickname: jest.fn().mockResolvedValue(true),
+      },
+      guild: { name: "Tournament Server" },
+      fields: {
+        getTextInputValue: jest.fn().mockReturnValue("12345678"),
+      },
+      isButton: () => false,
+      isModalSubmit: () => true,
+      inGuild: () => true,
+      deferReply: jest.fn().mockResolvedValue(true),
+      followUp: jest.fn().mockResolvedValue(true),
+      deleteReply: jest.fn().mockResolvedValue(true),
+    };
+    global.mockDb.get.mockResolvedValueOnce({
+      discord_id: "discord-1",
+      osu_username: "Player",
+      verification_code: "12345678",
+      is_verified: 0,
+    });
+    global.mockDb.run.mockResolvedValueOnce({ changes: 1 });
+
+    await handleVerificationInteraction(interaction);
+
+    expect(interaction.deferReply).toHaveBeenCalledWith({ ephemeral: true });
+    expect(interaction.followUp).toHaveBeenCalledWith(
+      expect.objectContaining({ ephemeral: false }),
+    );
+    expect(interaction.deleteReply).toHaveBeenCalled();
   });
 });

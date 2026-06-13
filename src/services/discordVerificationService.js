@@ -45,13 +45,14 @@ function formatPp(pp) {
 function createVerifiedEmbed(guildName, username, osuUser) {
   const statistics = osuUser?.statistics || {};
   const countryCode = osuUser?.country_code;
+  const avatarUrl = osuUser?.avatar_url;
   const profileUrl = osuUser?.id
     ? `https://osu.ppy.sh/users/${osuUser.id}`
     : `https://osu.ppy.sh/users/${encodeURIComponent(username)}`;
 
-  return new EmbedBuilder()
+  const embed = new EmbedBuilder()
     .setColor(0x57f287)
-    .setTitle(`✅ You are verified, ${username}`)
+    .setTitle(`✅ You are verified, ${username}!`)
     .setDescription(`Welcome to **${guildName}**`)
     .addFields(
       {
@@ -61,11 +62,14 @@ function createVerifiedEmbed(guildName, username, osuUser) {
       {
         name: "Ranks",
         value: [
-          `osu! 🌎 ${formatRank(statistics.global_rank)} (${formatPp(statistics.pp)})`,
-          `osu! ${countryCodeToFlag(countryCode)} ${formatRank(statistics.country_rank)}`,
+          `🌎 ${formatRank(statistics.global_rank)} (${formatPp(statistics.pp)})`,
+          `${countryCodeToFlag(countryCode)} ${formatRank(statistics.country_rank)}`,
         ].join("\n"),
       },
     );
+
+  if (avatarUrl) embed.setThumbnail(avatarUrl);
+  return embed;
 }
 
 async function getGuildMember(interaction) {
