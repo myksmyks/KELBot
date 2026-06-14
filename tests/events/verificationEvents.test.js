@@ -60,6 +60,7 @@ describe("Verification Events", () => {
   });
 
   test("publishes successful verification as a public message", async () => {
+    const send = jest.fn().mockResolvedValue(true);
     const interaction = {
       customId: `${CODE_MODAL_PREFIX}discord-1`,
       user: { id: "discord-1" },
@@ -68,6 +69,7 @@ describe("Verification Events", () => {
         setNickname: jest.fn().mockResolvedValue(true),
       },
       guild: { name: "Tournament Server" },
+      channel: { send },
       fields: {
         getTextInputValue: jest.fn().mockReturnValue("12345678"),
       },
@@ -75,7 +77,6 @@ describe("Verification Events", () => {
       isModalSubmit: () => true,
       inGuild: () => true,
       deferReply: jest.fn().mockResolvedValue(true),
-      followUp: jest.fn().mockResolvedValue(true),
       deleteReply: jest.fn().mockResolvedValue(true),
     };
     global.mockDb.get.mockResolvedValueOnce({
@@ -89,8 +90,10 @@ describe("Verification Events", () => {
     await handleVerificationInteraction(interaction);
 
     expect(interaction.deferReply).toHaveBeenCalledWith({ ephemeral: true });
-    expect(interaction.followUp).toHaveBeenCalledWith(
-      expect.objectContaining({ ephemeral: false }),
+    expect(send).toHaveBeenCalledWith(
+      expect.objectContaining({
+        embeds: expect.any(Array),
+      }),
     );
     expect(interaction.deleteReply).toHaveBeenCalled();
   });

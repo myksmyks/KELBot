@@ -172,6 +172,18 @@ async function handleCodeButton(interaction) {
   return true;
 }
 
+async function sendPublicVerificationResult(interaction, response) {
+  let channel = interaction.channel;
+  if (!channel?.send && interaction.channelId) {
+    channel = await interaction.client.channels.fetch(interaction.channelId);
+  }
+  if (!channel?.send) {
+    throw new Error("Verification channel could not be resolved.");
+  }
+
+  await channel.send(response);
+}
+
 async function handleCodeModal(interaction) {
   const ownerId = getOwnerId(interaction.customId, CODE_MODAL_PREFIX);
   if (!ownerId || (await rejectWrongUser(interaction, ownerId))) return true;
@@ -184,7 +196,7 @@ async function handleCodeModal(interaction) {
 
   if (result.status === "verified") {
     const response = await applyVerifiedMemberState(interaction, result);
-    await interaction.followUp({ ...response, ephemeral: false });
+    await sendPublicVerificationResult(interaction, response);
     await interaction.deleteReply();
   } else {
     const messages = {
