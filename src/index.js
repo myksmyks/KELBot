@@ -176,11 +176,11 @@ client.on("guildMemberAdd", handleGuildMemberAdd);
 const app = express();
 const port = Number(process.env.HEALTH_PORT || 3000);
 
-app.get("/health", (_req, res) => {
+app.get("/health", async (_req, res) => {
   const isReady = client.isReady?.() ?? false;
   let databaseStatus = "ok";
   try {
-    const db = getDatabase();
+    const db = await getDatabase();
     await db.get("SELECT COUNT(*) AS count FROM users");
   } catch (err) {
     databaseStatus = "error";
