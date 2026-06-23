@@ -180,7 +180,7 @@ app.get("/health", (_req, res) => {
   const isReady = client.isReady?.() ?? false;
   let databaseStatus = "ok";
   try {
-    const db = await getDatabase();
+    const db = getDatabase();
     await db.get("SELECT COUNT(*) AS count FROM users");
   } catch (err) {
     databaseStatus = "error";
