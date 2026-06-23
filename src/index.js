@@ -186,7 +186,7 @@ app.get("/health", async (_req, res) => {
     databaseStatus = "error";
   }
 
-  res.status.at(isReady ? 200 : 503).json({
+  res.status(isReady ? 200 : 503).json({
     status: isReady ? "ok" : "degraded",
     discord: isReady ? "ready" : "not_ready",
     database: databaseStatus,
